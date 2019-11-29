@@ -22,6 +22,7 @@ func main() {
 	r.HandleFunc("/_ah/warmup", s.WarmupRequestHandler).Methods("GET")
 	r.HandleFunc("/test-admin", s.WarmupRequestHandler).Methods("GET")
 	r.HandleFunc("/test-no-admin", s.WarmupRequestHandler).Methods("GET")
+	r.HandleFunc("/test-custom-auth", s.Auth(s.WarmupRequestHandler)).Methods("GET")
 
 	http.Handle("/", r)
 

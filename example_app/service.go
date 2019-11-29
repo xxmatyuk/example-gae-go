@@ -1,16 +1,16 @@
-package exmapleservice
+package exampleservice
 
 import (
 	"net/http"
 )
 
-type service struct{}
+type Service struct{}
 
-func NewService() *service {
-	return &service{}
+func NewService() *Service {
+	return &Service{}
 }
 
-func (s *service) WarmupRequestHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) WarmupRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	return
 }
