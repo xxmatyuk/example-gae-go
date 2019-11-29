@@ -82,10 +82,6 @@ func createJWT(audienceString string, credentialsPath string, algorithm string) 
 
 func resignToken(accessToken string) (string, error) {
 
-	var (
-		res map[string]interface{}
-	)
-
 	signClient := &http.Client{
 		Timeout: time.Millisecond * jwtAuthorizationTimeoutMsec,
 	}
@@ -110,6 +106,7 @@ func resignToken(accessToken string) (string, error) {
 		return "", err
 	}
 
+	var res map[string]interface{}
 	err = json.Unmarshal([]byte(body), &res)
 	if err != nil {
 		return "", err
