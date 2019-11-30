@@ -53,6 +53,7 @@ func createJWT(audienceString string, credentialsPath string, algorithm string) 
 
 	saEmail := creds["client_email"].(string)
 	tokenURI := creds["token_uri"].(string)
+	privateKey := creds["private_key"].(string)
 
 	claims := &customClaims{
 		Email:          saEmail,
@@ -70,10 +71,10 @@ func createJWT(audienceString string, credentialsPath string, algorithm string) 
 
 	switch algorithm {
 	case jwt.SigningMethodRS256.Alg():
-		privKey, _ := jwt.ParseRSAPrivateKeyFromPEM([]byte(creds["private_key"].(string)))
+		privKey, _ := jwt.ParseRSAPrivateKeyFromPEM([]byte(privateKey))
 		return token.SignedString(privKey)
 	case jwt.SigningMethodES256.Alg():
-		privKey, _ := jwt.ParseECPrivateKeyFromPEM([]byte(creds["private_key"].(string)))
+		privKey, _ := jwt.ParseECPrivateKeyFromPEM([]byte(privateKey))
 		return token.SignedString(privKey)
 	}
 
