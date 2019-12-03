@@ -7,7 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	service "github.com/xxmatyuk/example-gae-go/example_app_go112"
+	service "github.com/xxmatyuk/example-gae-go/example-app-go112"
 )
 
 func main() {
