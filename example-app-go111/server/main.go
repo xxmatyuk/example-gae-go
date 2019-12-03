@@ -7,7 +7,7 @@ import (
 
 	"google.golang.org/appengine"
 
-	service "github.com/xxmatyuk/example-gae-go111/example_app"
+	service "github.com/xxmatyuk/example-gae-go/example_app_go111"
 )
 
 func main() {
