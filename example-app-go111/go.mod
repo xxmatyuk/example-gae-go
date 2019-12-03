@@ -1,4 +1,4 @@
-module github.com/xxmatyuk/example-gae-go111/example_app
+module github.com/xxmatyuk/example-gae-go/example-app-go111
 
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
