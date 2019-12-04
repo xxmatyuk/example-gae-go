@@ -1,14 +1,12 @@
 package exampleservice
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
-
-	"google.golang.org/appengine"
-	"google.golang.org/appengine/log"
 )
 
 const (
@@ -74,8 +72,8 @@ func (s *Service) Auth(handler http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		ctx := appengine.NewContext(r)
-		log.Infof(ctx, "URL requested by: %s", claims.Email)
+		// Log who calls our API
+		s.logger.Info(fmt.Sprintf("URL requested by: %s", claims.Email))
 
 		handler(w, r)
 	}

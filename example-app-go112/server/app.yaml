@@ -10,11 +10,9 @@ handlers:
   - url: /_ah/*
     script: auto
     secure: always
-    login: admin
   - url: /test-admin
     script: auto
     secure: always
-    login: admin
   - url: /.*
     script: auto
     secure: always
