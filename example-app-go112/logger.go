@@ -20,6 +20,8 @@ func (l *loggingClient) doLog(msg string, severity logging.Severity) {
 		Severity: severity,
 		Payload:  msg,
 	})
+
+	l.lg.StandardLogger(severity).Println(msg)
 }
 
 func (l *loggingClient) Info(msg string) {
