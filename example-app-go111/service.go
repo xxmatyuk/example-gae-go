@@ -18,7 +18,8 @@ type Response struct {
 }
 
 type Service struct {
-	db DataStore
+	db    DataStore
+	cache Cache
 }
 
 func mustEnv(k string) string {
@@ -64,8 +65,10 @@ func (s *Service) writeResponseData(w http.ResponseWriter, code int, data interf
 }
 
 func NewService() *Service {
+	dsClient := NewDataStoreClient(mustEnv("DS_KIND"))
 	return &Service{
-		db: NewDataStoreClient(mustEnv("DS_KIND")),
+		db:    dsClient,
+		cache: NewCacheDB(dsClient),
 	}
 }
 
