@@ -22,6 +22,9 @@ func main() {
 	r.HandleFunc("/_ah/warmup", s.WarmupRequestHandler).Methods("GET")
 	r.HandleFunc("/test-admin", s.WarmupRequestHandler).Methods("GET")
 	r.HandleFunc("/test-no-admin", s.WarmupRequestHandler).Methods("GET")
+	r.HandleFunc("/get-entity/{key}", s.GetEntityHandler).Methods("GET")
+	r.HandleFunc("/put-entity", s.PutEntityHandler).Methods("PUT")
+	r.HandleFunc("/get-all-entities", s.GetAllEntitiesHandler).Methods("GET")
 	r.HandleFunc("/test-custom-auth", s.Auth(s.WarmupRequestHandler)).Methods("GET")
 
 	http.Handle("/", r)
