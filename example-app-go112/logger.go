@@ -2,6 +2,7 @@ package exampleservice
 
 import (
 	"context"
+	"fmt"
 
 	"cloud.google.com/go/logging"
 	"google.golang.org/genproto/googleapis/api/monitoredres"
@@ -25,7 +26,17 @@ func (l *loggingClient) Info(msg string) {
 	l.doLog(msg, logging.Info)
 }
 
+func (l *loggingClient) Infof(formatString string, toFormat ...interface{}) {
+	msg := fmt.Sprintf(formatString, toFormat...)
+	l.doLog(msg, logging.Info)
+}
+
 func (l *loggingClient) Debug(msg string) {
+	l.doLog(msg, logging.Debug)
+}
+
+func (l *loggingClient) Debugf(formatString string, toFormat ...interface{}) {
+	msg := fmt.Sprintf(formatString, toFormat...)
 	l.doLog(msg, logging.Debug)
 }
 
@@ -33,7 +44,17 @@ func (l *loggingClient) Error(msg string) {
 	l.doLog(msg, logging.Error)
 }
 
+func (l *loggingClient) Errorf(formatString string, toFormat ...interface{}) {
+	msg := fmt.Sprintf(formatString, toFormat...)
+	l.doLog(msg, logging.Error)
+}
+
 func (l *loggingClient) Warning(msg string) {
+	l.doLog(msg, logging.Error)
+}
+
+func (l *loggingClient) Warningf(formatString string, toFormat ...interface{}) {
+	msg := fmt.Sprintf(formatString, toFormat...)
 	l.doLog(msg, logging.Error)
 }
 
