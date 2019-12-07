@@ -60,12 +60,12 @@ func (l *loggingClient) Warningf(formatString string, toFormat ...interface{}) {
 	l.doLog(msg, logging.Error)
 }
 
-func initLoggerClient(logName string, projectID string, versionID string, instanceID string, serviceID string) (*loggingClient, error) {
+func initLoggerClient(logName string, projectID string, versionID string, instanceID string, serviceID string) *loggingClient {
 
 	ctx := context.Background()
 	client, err := logging.NewClient(ctx, projectID)
 	if err != nil {
-		return nil, err
+		panic(fmt.Sprintf("Error while logger init: %s", err.Error()))
 	}
 
 	resource := &monitoredres.MonitoredResource{
@@ -86,7 +86,5 @@ func initLoggerClient(logName string, projectID string, versionID string, instan
 		logging.CommonResource(resource),
 	)
 
-	return &loggingClient{
-		lg: lg,
-	}, err
+	return &loggingClient{lg: lg}
 }
