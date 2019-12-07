@@ -16,3 +16,12 @@ handlers:
   - url: /.*
     script: auto
     secure: always
+
+env_variables:
+  REDISHOST: ''
+  REDISPORT: ''
+  REDISDB: '0'
+  DS_KIND: ""
+
+vpc_access_connector:
+  name: ''
