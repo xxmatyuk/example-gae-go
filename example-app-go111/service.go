@@ -1,10 +1,13 @@
 package exampleservice
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"os"
+
+	"google.golang.org/appengine"
 )
 
 const (
@@ -75,4 +78,14 @@ func NewService() *Service {
 func (s *Service) WarmupRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	return
+}
+
+func (s *Service) ContextMiddleware(ctx context.Context, next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var context = ctx
+		if context == nil {
+			context = appengine.NewContext(r)
+		}
+		next.ServeHTTP(w, r.WithContext(context))
+	}
 }

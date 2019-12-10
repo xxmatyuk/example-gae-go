@@ -7,7 +7,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
 
-	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 )
 
@@ -44,7 +43,7 @@ func (e *TokenExtractor) ExtractToken(r *http.Request) (string, error) {
 }
 
 // Auth is middleware to authenticate http requests.
-func (s *Service) Auth(handler http.HandlerFunc) http.HandlerFunc {
+func (s *Service) Auth(next http.HandlerFunc) http.HandlerFunc {
 
 	keyFunction, err := publicKeysFunction()
 	if err != nil {
@@ -64,7 +63,7 @@ func (s *Service) Auth(handler http.HandlerFunc) http.HandlerFunc {
 		extractor := &TokenExtractor{}
 
 		if token, err = request.ParseFromRequest(r, extractor, keyFunction, request.WithClaims(claims)); err != nil {
-			w.WriteHeader(http.StatusUnauthorized)
+			s.writeResponseData(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 
@@ -74,9 +73,10 @@ func (s *Service) Auth(handler http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		ctx := appengine.NewContext(r)
-		log.Infof(ctx, "URL requested by: %s", claims.Email)
+		// Log the requester
+		log.Infof(r.Context(), "URL requested by: %s", claims.Email)
 
-		handler(w, r)
+		// Call the next handler
+		next(w, r)
 	}
 }

@@ -5,8 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-
-	"google.golang.org/appengine"
 )
 
 type Entity struct {
@@ -21,26 +19,21 @@ func (s *Service) GetEntityHandler(w http.ResponseWriter, r *http.Request) {
 		err    error
 	)
 
-	ctx := appengine.NewContext(r)
-	ctx, _ = appengine.Namespace(ctx, "")
-
 	vars := mux.Vars(r)
 	key := vars["key"]
 
-	if entity, err = s.cache.GetItem(ctx, key); err != nil {
+	if entity, err = s.cache.GetItem(r.Context(), key); err != nil {
 		resp := Response{fmt.Sprintf("Error: %s", err.Error())}
 		s.writeResponseData(w, http.StatusInternalServerError, &resp)
 		return
 	}
 
 	s.writeResponseData(w, http.StatusOK, &entity)
+
 	return
 }
 
 func (s *Service) PutEntityHandler(w http.ResponseWriter, r *http.Request) {
-
-	ctx := appengine.NewContext(r)
-	ctx, _ = appengine.Namespace(ctx, "")
 
 	var entity Entity
 	if err := s.parseRequest(r, &entity); err != nil {
@@ -49,24 +42,21 @@ func (s *Service) PutEntityHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.db.PutEntity(ctx, entity.Key, &entity); err != nil {
+	if err := s.db.PutEntity(r.Context(), entity.Key, &entity); err != nil {
 		resp := Response{fmt.Sprintf("Error: %s", err.Error())}
 		s.writeResponseData(w, http.StatusInternalServerError, &resp)
 		return
 	}
 
-	_ = s.cache.PutItem(ctx, &entity)
+	_ = s.cache.PutItem(r.Context(), &entity)
 
 	return
 }
 
 func (s *Service) GetAllEntitiesHandler(w http.ResponseWriter, r *http.Request) {
 
-	ctx := appengine.NewContext(r)
-	ctx, _ = appengine.Namespace(ctx, "")
-
 	var entities []Entity
-	if err := s.db.GetAllEntities(ctx, &entities); err != nil {
+	if err := s.db.GetAllEntities(r.Context(), &entities); err != nil {
 		resp := Response{fmt.Sprintf("Error: %s", err.Error())}
 		s.writeResponseData(w, http.StatusInternalServerError, &resp)
 		return
