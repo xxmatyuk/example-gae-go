@@ -1,7 +1,6 @@
 package exampleservice
 
 import (
-	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -76,16 +75,14 @@ func NewService() *Service {
 }
 
 func (s *Service) WarmupRequestHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
+	s.writeResponseData(w, http.StatusOK, &Response{"OK"})
 	return
 }
 
-func (s *Service) ContextMiddleware(ctx context.Context, next http.HandlerFunc) http.HandlerFunc {
+func (s *Service) ContextMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var context = ctx
-		if context == nil {
-			context = appengine.NewContext(r)
-		}
-		next.ServeHTTP(w, r.WithContext(context))
+		ctx := appengine.NewContext(r)
+		ctx, _ = appengine.Namespace(ctx, "")
+		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 }
