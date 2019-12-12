@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,7 +13,7 @@ import (
 	"google.golang.org/appengine/aetest"
 )
 
-func TestService(t *testing.T) {
+func TestEntities(t *testing.T) {
 	testContext, done, err := aetest.NewContext()
 	if err != nil {
 		t.Fatal(err)
@@ -20,48 +21,51 @@ func TestService(t *testing.T) {
 	testContext, _ = appengine.Namespace(testContext, "")
 	defer done()
 
-	// DB mocks
+	testEntity := Entity{
+		Key:   "foo",
+		Value: "bar",
+	}
+
 	okDBMock := DBMock{
 		MockPutEntity: func(ctx context.Context, key string, entity *Entity) error {
 			return nil
 		},
 		MockGetEntity: func(ctx context.Context, key string, entity *Entity) (*Entity, error) {
-			return &Entity{}, nil
+			return &testEntity, nil
 		},
 		MockGetAllEntities: func(ctx context.Context, entities *[]Entity) (*[]Entity, error) {
-			return &[]Entity{Entity{}}, nil
+			return &[]Entity{testEntity}, nil
 		},
 	}
 
-	// Cache mocks
 	okCacheMock := CacheMock{
 		MockGetItem: func(ctx context.Context, key string) (*Entity, error) {
-			return &Entity{}, nil
+			return &testEntity, nil
 		},
 		MockPutItem: func(ctx context.Context, entity *Entity) error {
 			return nil
 		},
 	}
 
-	// Define tests
-	tests := []struct {
+	testsGetEntity := []struct {
 		name             string
 		dbMock           DataStore
 		cacheMock        Cache
+		key              string
 		expectedCode     int
-		expectedResponse Response
+		expectedResponse Entity
 	}{
 		{
 			name:             "Happy-path",
 			dbMock:           okDBMock,
 			cacheMock:        okCacheMock,
+			key:              "foo",
 			expectedCode:     http.StatusOK,
-			expectedResponse: Response{"OK"},
+			expectedResponse: testEntity,
 		},
 	}
 
-	// Run positive tests
-	for _, test := range tests {
+	for _, test := range testsGetEntity {
 		t.Run(test.name, func(t *testing.T) {
 
 			s := &Service{
@@ -69,10 +73,11 @@ func TestService(t *testing.T) {
 				cache: test.cacheMock,
 			}
 
-			req, _ := http.NewRequest(http.MethodGet, "/_ah/warmup", &bytes.Buffer{})
+			url := fmt.Sprintf("/get-entity/%s", test.key)
+			req, _ := http.NewRequest(http.MethodGet, url, &bytes.Buffer{})
 			rr := httptest.NewRecorder()
 
-			performWarmUpRequest(t, testContext, rr, req, s)
+			performGetEntityRequest(t, testContext, rr, req, s)
 
 			// Status code check
 			if statusCode := rr.Code; statusCode != test.expectedCode {
@@ -80,7 +85,7 @@ func TestService(t *testing.T) {
 			}
 
 			// Body check
-			var actualResponse Response
+			var actualResponse Entity
 			json.NewDecoder(rr.Body).Decode(&actualResponse)
 			if actualResponse != test.expectedResponse {
 				t.Errorf("handler returned wrong response code: got %v want %v", actualResponse, test.expectedResponse)
@@ -88,14 +93,13 @@ func TestService(t *testing.T) {
 
 		})
 	}
-
 }
 
-func performWarmUpRequest(t *testing.T, ctx context.Context, rr *httptest.ResponseRecorder, req *http.Request, s *Service) {
+func performGetEntityRequest(t *testing.T, ctx context.Context, rr *httptest.ResponseRecorder, req *http.Request, s *Service) {
 
 	handlerFunc := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s.WarmupRequestHandler(w, r.WithContext(ctx))
+		s.GetEntityHandler(w, r.WithContext(ctx))
 	})
-
 	handlerFunc.ServeHTTP(rr, req)
+
 }

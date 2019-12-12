@@ -33,7 +33,7 @@ func (c *cachedDB) GetItem(ctx context.Context, key string) (*Entity, error) {
 	}
 
 	var e Entity
-	if err = c.DB.GetEntity(ctx, key, &e); err != nil {
+	if _, err = c.DB.GetEntity(ctx, key, &e); err != nil {
 		return nil, err
 	}
 

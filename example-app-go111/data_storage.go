@@ -8,8 +8,8 @@ import (
 
 type DataStore interface {
 	PutEntity(ctx context.Context, key string, entity *Entity) error
-	GetEntity(ctx context.Context, key string, entity *Entity) error
-	GetAllEntities(ctx context.Context, entities *[]Entity) error
+	GetEntity(ctx context.Context, key string, entity *Entity) (*Entity, error)
+	GetAllEntities(ctx context.Context, entities *[]Entity) (*[]Entity, error)
 }
 
 type ds struct {
@@ -22,10 +22,10 @@ func NewDataStoreClient(kind string) DataStore {
 	}
 }
 
-func (ds *ds) GetEntity(ctx context.Context, key string, entity *Entity) error {
+func (ds *ds) GetEntity(ctx context.Context, key string, entity *Entity) (*Entity, error) {
 	k := datastore.NewKey(ctx, ds.kind, key, 0, nil)
 	err := datastore.Get(ctx, k, entity)
-	return err
+	return entity, err
 }
 
 func (ds *ds) PutEntity(ctx context.Context, key string, entity *Entity) error {
@@ -34,7 +34,7 @@ func (ds *ds) PutEntity(ctx context.Context, key string, entity *Entity) error {
 	return err
 }
 
-func (ds *ds) GetAllEntities(ctx context.Context, entities *[]Entity) error {
+func (ds *ds) GetAllEntities(ctx context.Context, entities *[]Entity) (*[]Entity, error) {
 	_, err := datastore.NewQuery(ds.kind).GetAll(ctx, entities)
-	return err
+	return entities, err
 }

@@ -56,7 +56,7 @@ func (s *Service) PutEntityHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) GetAllEntitiesHandler(w http.ResponseWriter, r *http.Request) {
 
 	var entities []Entity
-	if err := s.db.GetAllEntities(r.Context(), &entities); err != nil {
+	if _, err := s.db.GetAllEntities(r.Context(), &entities); err != nil {
 		resp := Response{fmt.Sprintf("Error: %s", err.Error())}
 		s.writeResponseData(w, http.StatusInternalServerError, &resp)
 		return
