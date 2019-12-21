@@ -89,7 +89,7 @@ func TestService(t *testing.T) {
 			if test.withAuth {
 				req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", test.token))
 			}
-			performWarmUpRequest(t, testContext, rr, req, s, test.withAuth)
+			performWarmUpRequest(testContext, rr, req, s, test.withAuth)
 
 			// Status code check
 			if statusCode := rr.Code; statusCode != test.expectedCode {
@@ -108,7 +108,7 @@ func TestService(t *testing.T) {
 
 }
 
-func performWarmUpRequest(t *testing.T, ctx context.Context, rr *httptest.ResponseRecorder, req *http.Request, s *Service, withAuth bool) {
+func performWarmUpRequest(ctx context.Context, rr *httptest.ResponseRecorder, req *http.Request, s *Service, withAuth bool) {
 
 	var handlerFunc http.HandlerFunc
 	if withAuth {
@@ -117,7 +117,7 @@ func performWarmUpRequest(t *testing.T, ctx context.Context, rr *httptest.Respon
 		}))
 	} else {
 		handlerFunc = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			s.WarmupRequestHandler(w, r.WithContext(ctx))
+			s.WarmupRequestHandler(w, r)
 		})
 	}
 
