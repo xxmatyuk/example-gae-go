@@ -88,10 +88,8 @@ func TestService(t *testing.T) {
 
 			if test.withAuth {
 				req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", test.token))
-				performAuthWarmUpRequest(t, testContext, rr, req, s)
-			} else {
-				performWarmUpRequest(t, testContext, rr, req, s)
 			}
+			performWarmUpRequest(t, testContext, rr, req, s, test.withAuth)
 
 			// Status code check
 			if statusCode := rr.Code; statusCode != test.expectedCode {
@@ -110,20 +108,18 @@ func TestService(t *testing.T) {
 
 }
 
-func performWarmUpRequest(t *testing.T, ctx context.Context, rr *httptest.ResponseRecorder, req *http.Request, s *Service) {
+func performWarmUpRequest(t *testing.T, ctx context.Context, rr *httptest.ResponseRecorder, req *http.Request, s *Service, withAuth bool) {
 
-	handlerFunc := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s.WarmupRequestHandler(w, r.WithContext(ctx))
-	})
-
-	handlerFunc.ServeHTTP(rr, req)
-}
-
-func performAuthWarmUpRequest(t *testing.T, ctx context.Context, rr *httptest.ResponseRecorder, req *http.Request, s *Service) {
-
-	handlerFunc := s.Auth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s.WarmupRequestHandler(w, r)
-	}))
+	var handlerFunc http.HandlerFunc
+	if withAuth {
+		handlerFunc = s.Auth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			s.WarmupRequestHandler(w, r)
+		}))
+	} else {
+		handlerFunc = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			s.WarmupRequestHandler(w, r.WithContext(ctx))
+		})
+	}
 
 	handlerFunc.ServeHTTP(rr, req.WithContext(ctx))
 }
