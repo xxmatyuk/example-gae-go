@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -38,12 +39,33 @@ func TestEntities(t *testing.T) {
 		},
 	}
 
+	errDBMock := DBMock{
+		MockPutEntity: func(ctx context.Context, key string, entity *Entity) error {
+			return errors.New("error")
+		},
+		MockGetEntity: func(ctx context.Context, key string, entity *Entity) (*Entity, error) {
+			return nil, errors.New("error")
+		},
+		MockGetAllEntities: func(ctx context.Context, entities *[]Entity) (*[]Entity, error) {
+			return nil, errors.New("error")
+		},
+	}
+
 	okCacheMock := CacheMock{
 		MockGetItem: func(ctx context.Context, key string) (*Entity, error) {
 			return &testEntity, nil
 		},
 		MockPutItem: func(ctx context.Context, entity *Entity) error {
 			return nil
+		},
+	}
+
+	errCacheMock := CacheMock{
+		MockGetItem: func(ctx context.Context, key string) (*Entity, error) {
+			return nil, errors.New("error")
+		},
+		MockPutItem: func(ctx context.Context, entity *Entity) error {
+			return errors.New("error")
 		},
 	}
 
@@ -56,12 +78,34 @@ func TestEntities(t *testing.T) {
 		expectedResponse Entity
 	}{
 		{
-			name:             "Happy-path",
+			name:             "happy-path",
 			dbMock:           okDBMock,
 			cacheMock:        okCacheMock,
 			key:              "foo",
 			expectedCode:     http.StatusOK,
 			expectedResponse: testEntity,
+		},
+		{
+			name:             "ok-cache-fail-db",
+			dbMock:           errDBMock,
+			cacheMock:        okCacheMock,
+			key:              "foo",
+			expectedCode:     http.StatusOK,
+			expectedResponse: testEntity,
+		},
+		{
+			name:         "fail-cache-ok-db",
+			dbMock:       okDBMock,
+			cacheMock:    errCacheMock,
+			key:          "foo",
+			expectedCode: http.StatusInternalServerError,
+		},
+		{
+			name:         "fail-cache-fail-db",
+			dbMock:       errDBMock,
+			cacheMock:    errCacheMock,
+			key:          "foo",
+			expectedCode: http.StatusInternalServerError,
 		},
 	}
 
@@ -98,8 +142,8 @@ func TestEntities(t *testing.T) {
 func performGetEntityRequest(t *testing.T, ctx context.Context, rr *httptest.ResponseRecorder, req *http.Request, s *Service) {
 
 	handlerFunc := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s.GetEntityHandler(w, r.WithContext(ctx))
+		s.GetEntityHandler(w, r)
 	})
-	handlerFunc.ServeHTTP(rr, req)
 
+	handlerFunc.ServeHTTP(rr, req.WithContext(ctx))
 }
