@@ -122,8 +122,8 @@ func performWarmUpRequest(t *testing.T, ctx context.Context, rr *httptest.Respon
 func performAuthWarmUpRequest(t *testing.T, ctx context.Context, rr *httptest.ResponseRecorder, req *http.Request, s *Service) {
 
 	handlerFunc := s.Auth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s.WarmupRequestHandler(w, r.WithContext(ctx))
+		s.WarmupRequestHandler(w, r)
 	}))
 
-	handlerFunc.ServeHTTP(rr, req)
+	handlerFunc.ServeHTTP(rr, req.WithContext(ctx))
 }

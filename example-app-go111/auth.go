@@ -12,7 +12,7 @@ import (
 
 const (
 	jwtGAETokenHeader           = "x-goog-iap-jwt-assertion"
-	standardAuthorizationHeader = "Authorization"
+	standardAuthorizationHeader = "authorization"
 	baererString                = "BEARER "
 )
 
@@ -34,7 +34,7 @@ func (e *TokenExtractor) ExtractToken(r *http.Request) (string, error) {
 			return headerValue[0], nil
 		} else if strings.ToLower(headerKey) == standardAuthorizationHeader {
 			if len(headerValue[0]) > 6 && strings.ToUpper(headerValue[0][0:7]) == baererString {
-				return headerValue[0][0:7], nil
+				return headerValue[0][7:], nil
 			}
 			return "", nil
 		}
