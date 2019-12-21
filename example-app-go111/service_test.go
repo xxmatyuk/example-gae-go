@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,16 +13,9 @@ import (
 	"google.golang.org/appengine/aetest"
 )
 
-func TestService(t *testing.T) {
-	testContext, done, err := aetest.NewContext()
-	if err != nil {
-		t.Fatal(err)
-	}
-	testContext, _ = appengine.Namespace(testContext, "")
-	defer done()
-
+var (
 	// DB mocks
-	okDBMock := DBMock{
+	okDBMock = DBMock{
 		MockPutEntity: func(ctx context.Context, key string, entity *Entity) error {
 			return nil
 		},
@@ -34,7 +28,7 @@ func TestService(t *testing.T) {
 	}
 
 	// Cache mocks
-	okCacheMock := CacheMock{
+	okCacheMock = CacheMock{
 		MockGetItem: func(ctx context.Context, key string) (*Entity, error) {
 			return &Entity{}, nil
 		},
@@ -42,19 +36,39 @@ func TestService(t *testing.T) {
 			return nil
 		},
 	}
+)
+
+func TestService(t *testing.T) {
+	testContext, done, err := aetest.NewContext()
+	if err != nil {
+		t.Fatal(err)
+	}
+	testContext, _ = appengine.Namespace(testContext, "")
+	defer done()
 
 	// Define tests
 	tests := []struct {
 		name             string
 		dbMock           DataStore
 		cacheMock        Cache
+		token            string
+		withAuth         bool
 		expectedCode     int
 		expectedResponse Response
 	}{
 		{
-			name:             "Happy-path",
+			name:             "Happy-path-no-auth",
 			dbMock:           okDBMock,
 			cacheMock:        okCacheMock,
+			expectedCode:     http.StatusOK,
+			expectedResponse: Response{"OK"},
+		},
+		{
+			name:             "Happy-path-with-auth",
+			dbMock:           okDBMock,
+			cacheMock:        okCacheMock,
+			token:            mustEnv("TOKEN"),
+			withAuth:         true,
 			expectedCode:     http.StatusOK,
 			expectedResponse: Response{"OK"},
 		},
@@ -72,7 +86,12 @@ func TestService(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/_ah/warmup", &bytes.Buffer{})
 			rr := httptest.NewRecorder()
 
-			performWarmUpRequest(t, testContext, rr, req, s)
+			if test.withAuth {
+				req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", test.token))
+				performAuthWarmUpRequest(t, testContext, rr, req, s)
+			} else {
+				performWarmUpRequest(t, testContext, rr, req, s)
+			}
 
 			// Status code check
 			if statusCode := rr.Code; statusCode != test.expectedCode {
@@ -96,6 +115,15 @@ func performWarmUpRequest(t *testing.T, ctx context.Context, rr *httptest.Respon
 	handlerFunc := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s.WarmupRequestHandler(w, r.WithContext(ctx))
 	})
+
+	handlerFunc.ServeHTTP(rr, req)
+}
+
+func performAuthWarmUpRequest(t *testing.T, ctx context.Context, rr *httptest.ResponseRecorder, req *http.Request, s *Service) {
+
+	handlerFunc := s.Auth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s.WarmupRequestHandler(w, r.WithContext(ctx))
+	}))
 
 	handlerFunc.ServeHTTP(rr, req)
 }
