@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+
+	"google.golang.org/appengine/datastore"
 )
 
 type Entity struct {
@@ -22,9 +24,12 @@ func (s *Service) GetEntityHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	key := vars["key"]
 
-	if entity, err = s.cache.GetItem(r.Context(), key); err != nil {
+	if entity, err = s.cache.GetItem(r.Context(), key); err != nil && err != datastore.ErrNoSuchEntity {
 		resp := Response{fmt.Sprintf("Error: %s", err.Error())}
 		s.writeResponseData(w, http.StatusInternalServerError, &resp)
+		return
+	} else if err == datastore.ErrNoSuchEntity {
+		s.writeResponseData(w, http.StatusNotFound, nil)
 		return
 	}
 

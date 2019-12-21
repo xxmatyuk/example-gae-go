@@ -12,6 +12,51 @@ import (
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/aetest"
+	"google.golang.org/appengine/datastore"
+)
+
+var (
+	testEntity = Entity{
+		Key:   "foo",
+		Value: "bar",
+	}
+
+	// DB Mocks
+	okDBPut = func(ctx context.Context, key string, entity *Entity) error {
+		return nil
+	}
+	errDBPut = func(ctx context.Context, key string, entity *Entity) error {
+		return errors.New("fail")
+	}
+	okDBGet = func(ctx context.Context, key string, entity *Entity) (*Entity, error) {
+		return &testEntity, nil
+	}
+	errDDGet = func(ctx context.Context, key string, entity *Entity) (*Entity, error) {
+		return nil, errors.New("fail")
+	}
+	missDBGet = func(ctx context.Context, key string, entity *Entity) (*Entity, error) {
+		return nil, datastore.ErrNoSuchEntity
+	}
+	okDBGetAll = func(ctx context.Context, entities *[]Entity) (*[]Entity, error) {
+		return &[]Entity{testEntity}, nil
+	}
+	errDBGetAll = func(ctx context.Context, entities *[]Entity) (*[]Entity, error) {
+		return nil, errors.New("fail")
+	}
+
+	// Cache mocks
+	okCacheGet = func(ctx context.Context, key string) (*Entity, error) {
+		return &testEntity, nil
+	}
+	errCacheGet = func(ctx context.Context, key string) (*Entity, error) {
+		return nil, errors.New("fail")
+	}
+	missCacheGet = func(ctx context.Context, key string) (*Entity, error) {
+		return nil, datastore.ErrNoSuchEntity
+	}
+	okCachePut = func(ctx context.Context, entity *Entity) error {
+		return nil
+	}
 )
 
 func TestEntities(t *testing.T) {
@@ -27,48 +72,6 @@ func TestEntities(t *testing.T) {
 		Value: "bar",
 	}
 
-	okDBMock := DBMock{
-		MockPutEntity: func(ctx context.Context, key string, entity *Entity) error {
-			return nil
-		},
-		MockGetEntity: func(ctx context.Context, key string, entity *Entity) (*Entity, error) {
-			return &testEntity, nil
-		},
-		MockGetAllEntities: func(ctx context.Context, entities *[]Entity) (*[]Entity, error) {
-			return &[]Entity{testEntity}, nil
-		},
-	}
-
-	errDBMock := DBMock{
-		MockPutEntity: func(ctx context.Context, key string, entity *Entity) error {
-			return errors.New("error")
-		},
-		MockGetEntity: func(ctx context.Context, key string, entity *Entity) (*Entity, error) {
-			return nil, errors.New("error")
-		},
-		MockGetAllEntities: func(ctx context.Context, entities *[]Entity) (*[]Entity, error) {
-			return nil, errors.New("error")
-		},
-	}
-
-	okCacheMock := CacheMock{
-		MockGetItem: func(ctx context.Context, key string) (*Entity, error) {
-			return &testEntity, nil
-		},
-		MockPutItem: func(ctx context.Context, entity *Entity) error {
-			return nil
-		},
-	}
-
-	errCacheMock := CacheMock{
-		MockGetItem: func(ctx context.Context, key string) (*Entity, error) {
-			return nil, errors.New("error")
-		},
-		MockPutItem: func(ctx context.Context, entity *Entity) error {
-			return errors.New("error")
-		},
-	}
-
 	testsGetEntity := []struct {
 		name             string
 		dbMock           DataStore
@@ -78,32 +81,70 @@ func TestEntities(t *testing.T) {
 		expectedResponse Entity
 	}{
 		{
-			name:             "happy-path",
-			dbMock:           okDBMock,
-			cacheMock:        okCacheMock,
+			name: "happy-path",
+			dbMock: DBMock{
+				MockPutEntity:      okDBPut,
+				MockGetEntity:      okDBGet,
+				MockGetAllEntities: okDBGetAll,
+			},
+			cacheMock: CacheMock{
+				MockGetItem: okCacheGet,
+				MockPutItem: okCachePut,
+			},
 			key:              "foo",
 			expectedCode:     http.StatusOK,
 			expectedResponse: testEntity,
 		},
 		{
-			name:             "ok-cache-fail-db",
-			dbMock:           errDBMock,
-			cacheMock:        okCacheMock,
+			name: "ok-cache-fail-db",
+			dbMock: DBMock{
+				MockPutEntity:      okDBPut,
+				MockGetEntity:      errDDGet,
+				MockGetAllEntities: okDBGetAll,
+			},
+			cacheMock: CacheMock{
+				MockGetItem: okCacheGet,
+				MockPutItem: okCachePut,
+			},
 			key:              "foo",
 			expectedCode:     http.StatusOK,
 			expectedResponse: testEntity,
 		},
 		{
-			name:         "fail-cache-ok-db",
-			dbMock:       okDBMock,
-			cacheMock:    errCacheMock,
+			name: "cache-miss-ok-miss",
+			dbMock: DBMock{
+				MockPutEntity:      okDBPut,
+				MockGetEntity:      okDBGet,
+				MockGetAllEntities: okDBGetAll,
+			},
+			cacheMock: CacheMock{
+				MockGetItem: missCacheGet,
+				MockPutItem: okCachePut,
+			},
+			key:          "foo",
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:   "fail-cache-ok-db",
+			dbMock: okDBMock,
+			cacheMock: CacheMock{
+				MockGetItem: errCacheGet,
+				MockPutItem: okCachePut,
+			},
 			key:          "foo",
 			expectedCode: http.StatusInternalServerError,
 		},
 		{
-			name:         "fail-cache-fail-db",
-			dbMock:       errDBMock,
-			cacheMock:    errCacheMock,
+			name: "fail-cache-fail-db",
+			dbMock: DBMock{
+				MockPutEntity:      okDBPut,
+				MockGetEntity:      errDDGet,
+				MockGetAllEntities: okDBGetAll,
+			},
+			cacheMock: CacheMock{
+				MockGetItem: errCacheGet,
+				MockPutItem: okCachePut,
+			},
 			key:          "foo",
 			expectedCode: http.StatusInternalServerError,
 		},

@@ -25,19 +25,21 @@ func NewCacheDB(db DataStore) Cache {
 func (c *cachedDB) GetItem(ctx context.Context, key string) (*Entity, error) {
 
 	item, err := memcache.Get(ctx, key)
-	if err == nil {
+	if err != nil && err == memcache.ErrCacheMiss {
+		var e Entity
+		if _, err = c.DB.GetEntity(ctx, key, &e); err != nil {
+			return nil, err
+		}
+
+		return &e, c.PutItem(ctx, &e)
+	} else if err != nil {
+		return nil, err
+	} else {
 		return &Entity{
 			Key:   key,
 			Value: string(item.Value),
 		}, nil
 	}
-
-	var e Entity
-	if _, err = c.DB.GetEntity(ctx, key, &e); err != nil {
-		return nil, err
-	}
-
-	return &e, c.PutItem(ctx, &e)
 }
 
 func (c *cachedDB) PutItem(ctx context.Context, entity *Entity) error {
