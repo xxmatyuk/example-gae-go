@@ -67,11 +67,6 @@ func TestEntities(t *testing.T) {
 	testContext, _ = appengine.Namespace(testContext, "")
 	defer done()
 
-	testEntity := Entity{
-		Key:   "foo",
-		Value: "bar",
-	}
-
 	testsGetEntity := []struct {
 		name             string
 		dbMock           DataStore
@@ -162,7 +157,7 @@ func TestEntities(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, url, &bytes.Buffer{})
 			rr := httptest.NewRecorder()
 
-			performGetEntityRequest(t, testContext, rr, req, s)
+			performGetEntityRequest(testContext, rr, req, s)
 
 			// Status code check
 			if statusCode := rr.Code; statusCode != test.expectedCode {
@@ -180,7 +175,7 @@ func TestEntities(t *testing.T) {
 	}
 }
 
-func performGetEntityRequest(t *testing.T, ctx context.Context, rr *httptest.ResponseRecorder, req *http.Request, s *Service) {
+func performGetEntityRequest(ctx context.Context, rr *httptest.ResponseRecorder, req *http.Request, s *Service) {
 
 	handlerFunc := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s.GetEntityHandler(w, r)
