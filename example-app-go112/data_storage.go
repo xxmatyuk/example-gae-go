@@ -14,8 +14,8 @@ type Entity struct {
 
 type DataStoreClient interface {
 	PutEntity(key string, entity *Entity) error
-	GetEntity(key string, entity *Entity) error
-	GetAllEntities() ([]Entity, error)
+	GetEntity(key string) (*Entity, error)
+	GetAllEntities() (*[]Entity, error)
 }
 
 type ds struct {
@@ -38,10 +38,14 @@ func NewDataStoreClient(projectID, kind string) DataStoreClient {
 	}
 }
 
-func (ds *ds) GetEntity(key string, entity *Entity) error {
+func (ds *ds) GetEntity(key string) (*Entity, error) {
+	var entity Entity
 	ctx := context.Background()
 	k := datastore.NameKey(ds.kind, key, nil)
-	return ds.client.Get(ctx, k, &entity)
+	if err := ds.client.Get(ctx, k, &entity); err != nil {
+		return nil, err
+	}
+	return &entity, nil
 }
 
 func (ds *ds) PutEntity(key string, entity *Entity) error {
@@ -51,9 +55,9 @@ func (ds *ds) PutEntity(key string, entity *Entity) error {
 	return err
 }
 
-func (ds *ds) GetAllEntities() ([]Entity, error) {
+func (ds *ds) GetAllEntities() (*[]Entity, error) {
 	ctx := context.Background()
 	var entities []Entity
 	_, err := ds.client.GetAll(ctx, datastore.NewQuery(ds.kind), &entities)
-	return entities, err
+	return &entities, err
 }

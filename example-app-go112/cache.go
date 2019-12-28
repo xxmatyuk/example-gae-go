@@ -42,19 +42,22 @@ func (c *cachedDB) GetItem(key string) (*Entity, error) {
 
 	status := c.redisClient.Get(key)
 	_, err := status.Result()
-	if err == nil && status.Val() != "" {
+
+	if err == nil && status.Val() == "" {
+		var e *Entity
+		if e, err = c.dbClient.GetEntity(key); err != nil {
+			return nil, err
+		}
+
+		return e, c.PutItem(e)
+	} else if err != nil {
+		return nil, err
+	} else {
 		return &Entity{
 			Key:   key,
 			Value: string(status.Val()),
 		}, nil
 	}
-
-	var e Entity
-	if err = c.dbClient.GetEntity(key, &e); err != nil {
-		return nil, err
-	}
-
-	return &e, c.PutItem(&e)
 }
 
 func (c *cachedDB) PutItem(entity *Entity) error {

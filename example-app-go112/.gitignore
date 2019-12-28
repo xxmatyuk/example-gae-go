@@ -1,2 +1,5 @@
 go.sum
 creds.json
+server/dev.yaml
+bin/*
+server/.gcloudignore

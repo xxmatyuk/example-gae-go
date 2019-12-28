@@ -98,6 +98,6 @@ func NewService() *Service {
 }
 
 func (s *Service) WarmupRequestHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
+	s.writeResponseData(w, http.StatusOK, &Response{"OK"})
 	return
 }

@@ -21,6 +21,9 @@ func (s *Service) GetEntityHandler(w http.ResponseWriter, r *http.Request) {
 		resp := Response{fmt.Sprintf("Error: %s", err.Error())}
 		s.writeResponseData(w, http.StatusInternalServerError, &resp)
 		return
+	} else if entity == nil {
+		s.writeResponseData(w, http.StatusNotFound, nil)
+		return
 	}
 
 	s.writeResponseData(w, http.StatusOK, &entity)
@@ -50,7 +53,7 @@ func (s *Service) PutEntityHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) GetAllEntitiesHandler(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		entities []Entity
+		entities *[]Entity
 		err      error
 	)
 
