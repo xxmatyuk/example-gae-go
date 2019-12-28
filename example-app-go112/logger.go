@@ -3,6 +3,7 @@ package exampleservice
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"cloud.google.com/go/logging"
 	stdLog "github.com/sirupsen/logrus"
@@ -98,6 +99,7 @@ func initLoggerClient(logName string, projectID string, versionID string, instan
 	)
 
 	stdLog.SetFormatter(&stdLog.JSONFormatter{})
+	stdLog.SetOutput(os.Stdout)
 
 	return &loggingClient{lg: lg}
 }
