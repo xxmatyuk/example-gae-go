@@ -33,8 +33,7 @@ func (l *loggingClient) Info(msg string) {
 
 func (l *loggingClient) Infof(formatString string, toFormat ...interface{}) {
 	stdLog.Infof(formatString, toFormat...)
-	msg := fmt.Sprintf(formatString, toFormat...)
-	l.doLog(msg, logging.Info)
+	l.doLog(fmt.Sprintf(formatString, toFormat...), logging.Info)
 }
 
 func (l *loggingClient) Debug(msg string) {
@@ -44,8 +43,7 @@ func (l *loggingClient) Debug(msg string) {
 
 func (l *loggingClient) Debugf(formatString string, toFormat ...interface{}) {
 	stdLog.Debugf(formatString, toFormat...)
-	msg := fmt.Sprintf(formatString, toFormat...)
-	l.doLog(msg, logging.Debug)
+	l.doLog(fmt.Sprintf(formatString, toFormat...), logging.Debug)
 }
 
 func (l *loggingClient) Error(msg string) {
@@ -55,8 +53,7 @@ func (l *loggingClient) Error(msg string) {
 
 func (l *loggingClient) Errorf(formatString string, toFormat ...interface{}) {
 	stdLog.Errorf(formatString, toFormat...)
-	msg := fmt.Sprintf(formatString, toFormat...)
-	l.doLog(msg, logging.Error)
+	l.doLog(fmt.Sprintf(formatString, toFormat...), logging.Error)
 }
 
 func (l *loggingClient) Warning(msg string) {
@@ -66,8 +63,7 @@ func (l *loggingClient) Warning(msg string) {
 
 func (l *loggingClient) Warningf(formatString string, toFormat ...interface{}) {
 	stdLog.Warningf(formatString, toFormat...)
-	msg := fmt.Sprintf(formatString, toFormat...)
-	l.doLog(msg, logging.Error)
+	l.doLog(fmt.Sprintf(formatString, toFormat...), logging.Error)
 }
 
 func initLoggerClient(logName string, projectID string, versionID string, instanceID string, serviceID string) *loggingClient {
