@@ -19,8 +19,6 @@ func (l *loggingClient) doLog(msg string, severity logging.Severity) {
 		return
 	}
 
-	l.lg.StandardLogger(severity).Println(msg)
-
 	l.lg.Log(logging.Entry{
 		Severity: severity,
 		Payload:  msg,
