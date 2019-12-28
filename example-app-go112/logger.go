@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/logging"
+	stdLog "github.com/sirupsen/logrus"
 	"google.golang.org/genproto/googleapis/api/monitoredres"
 )
 
@@ -16,46 +17,56 @@ func (l *loggingClient) doLog(msg string, severity logging.Severity) {
 	if l.lg == nil {
 		return
 	}
+
+	l.lg.StandardLogger(severity).Println(msg)
+
 	l.lg.Log(logging.Entry{
 		Severity: severity,
 		Payload:  msg,
 	})
 
-	l.lg.StandardLogger(severity).Println(msg)
 }
 
 func (l *loggingClient) Info(msg string) {
+	stdLog.Info(msg)
 	l.doLog(msg, logging.Info)
 }
 
 func (l *loggingClient) Infof(formatString string, toFormat ...interface{}) {
+	stdLog.Infof(formatString, toFormat...)
 	msg := fmt.Sprintf(formatString, toFormat...)
 	l.doLog(msg, logging.Info)
 }
 
 func (l *loggingClient) Debug(msg string) {
+	stdLog.Debug(msg)
 	l.doLog(msg, logging.Debug)
 }
 
 func (l *loggingClient) Debugf(formatString string, toFormat ...interface{}) {
+	stdLog.Debugf(formatString, toFormat...)
 	msg := fmt.Sprintf(formatString, toFormat...)
 	l.doLog(msg, logging.Debug)
 }
 
 func (l *loggingClient) Error(msg string) {
+	stdLog.Error(msg)
 	l.doLog(msg, logging.Error)
 }
 
 func (l *loggingClient) Errorf(formatString string, toFormat ...interface{}) {
+	stdLog.Errorf(formatString, toFormat...)
 	msg := fmt.Sprintf(formatString, toFormat...)
 	l.doLog(msg, logging.Error)
 }
 
 func (l *loggingClient) Warning(msg string) {
+	stdLog.Warning(msg)
 	l.doLog(msg, logging.Error)
 }
 
 func (l *loggingClient) Warningf(formatString string, toFormat ...interface{}) {
+	stdLog.Warningf(formatString, toFormat...)
 	msg := fmt.Sprintf(formatString, toFormat...)
 	l.doLog(msg, logging.Error)
 }
@@ -85,6 +96,8 @@ func initLoggerClient(logName string, projectID string, versionID string, instan
 		}),
 		logging.CommonResource(resource),
 	)
+
+	stdLog.SetFormatter(&stdLog.JSONFormatter{})
 
 	return &loggingClient{lg: lg}
 }

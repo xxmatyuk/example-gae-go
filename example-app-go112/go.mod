@@ -11,6 +11,7 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/onsi/ginkgo v1.10.3 // indirect
 	github.com/onsi/gomega v1.7.1 // indirect
+	github.com/sirupsen/logrus v1.4.2
 	google.golang.org/appengine v1.6.5
 	google.golang.org/genproto v0.0.0-20190716160619-c506a9f90610
 )
