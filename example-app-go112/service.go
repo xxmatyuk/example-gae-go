@@ -12,7 +12,7 @@ import (
 const (
 	contentTypeHeader   = "Content-type"
 	applicationJSONType = "application/json"
-	appLogName          = "app-log"
+	appLogName          = "app_log"
 )
 
 type Response struct {
